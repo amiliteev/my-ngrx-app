@@ -1,0 +1,31 @@
+.link-type,
+.link-action {
+  max-width: 48px;
+}
+
+.link-name {
+  flex: 5;
+}
+
+.link-status {
+  flex: 2;
+}
+
+h3 {
+  position: relative;
+  margin: 16px;
+}
+
+button.sync {
+  position: absolute;
+  top: -12px;
+  right: 0;
+}
+
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  color: white;
+}
+

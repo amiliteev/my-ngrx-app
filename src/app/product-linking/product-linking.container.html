@@ -1,0 +1,48 @@
+<h3>Product links count: {{(productLinks$ | async).length}}
+<button mat-icon-button class="sync" (click)="fetchProductLinks()">
+  <mat-icon>sync</mat-icon>
+</button>
+</h3>
+<mat-table [dataSource]="dataSource" matSort>
+
+  <ng-container matColumnDef="icon">
+    <mat-header-cell *matHeaderCellDef class="link-type">Type</mat-header-cell>
+    <mat-cell *matCellDef="let row" class="link-type">
+      <ng-container *ngIf="row.linkType === LinkType.GA"><img src="/assets/ga.png"></ng-container>
+      <ng-container *ngIf="row.linkType === LinkType.ADWORDS"><img src="/assets/aw.png"></ng-container>
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="productLinkName">
+    <mat-header-cell *matHeaderCellDef class="link-name">Name</mat-header-cell>
+    <mat-cell *matCellDef="let row" class="link-name"> {{row.productLinkName}} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="isEnabled">
+    <mat-header-cell *matHeaderCellDef class="link-status">Status</mat-header-cell>
+    <mat-cell *matCellDef="let row" class="link-status"> {{row.enabled ? 'Enabled' : 'Disabled'}} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <mat-header-cell *matHeaderCellDef class="link-action">Action</mat-header-cell>
+    <mat-cell *matCellDef="let row" class="link-action">
+      <mat-menu #appMenu="matMenu">
+        <button mat-menu-item (click)="toggleEnabled(row)">{{row.enabled ? 'Disable' : 'Enable'}}</button>
+        <button mat-menu-item (click)="deleteRow(row)">Delete</button>
+      </mat-menu>
+      <button mat-icon-button [matMenuTriggerFor]="appMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="['icon', 'productLinkName', 'isEnabled', 'action']"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: ['icon', 'productLinkName', 'isEnabled', 'action']"></mat-row>
+</mat-table>
+
+<span class="fab">
+  <button mat-fab (click)="addProductLink()">
+    <mat-icon>add circle</mat-icon>
+  </button>
+</span>
+
