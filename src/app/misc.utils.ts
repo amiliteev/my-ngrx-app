@@ -1,9 +1,9 @@
-import {Observable, of, OperatorFunction} from 'rxjs';
-import {delay, tap} from 'rxjs/operators';
-import {RequestAction} from './state/global/global.actions';
+import {Observable, of, OperatorFunction, empty, throwError} from 'rxjs';
+import {delay, tap, catchError} from 'rxjs/operators';
+import {RequestAction} from './state/shared/shared.actions';
 
 export function randomDelay<T>(): OperatorFunction<T, T> {
-  return delay(Math.floor(Math.random() * 1000));
+  return delay(Math.floor(Math.random() * 1000) + 1000);
 }
 
 export function filterFirst<T>(array: T[], callbackfn: (val: T) => boolean): T[] {
@@ -14,11 +14,14 @@ export function filterFirst<T>(array: T[], callbackfn: (val: T) => boolean): T[]
 
 class TimestampedResponse {
   timestamp: number;
-  response: any;
+  request$?: Observable<any>;
+  response?: any;
 }
 
 export enum Entity {
-  PRODUCT_LINK
+  PRODUCT_LINK,
+  GA_ACCOUNT_HEADER,
+  GA_PROPERTY
 }
 
 const cache = new Map<string, TimestampedResponse>();
@@ -39,9 +42,21 @@ export function cacheable<T>(action: RequestAction, request$: Observable<T>): Ob
   const cachedResponse = cache.get(actionAsString);
   if (cachedResponse &&
       (Date.now() - cachedResponse.timestamp) / 1000 < action.cacheExpiresInSeconds) {
-    return of(cachedResponse.response);
+        if (!cachedResponse.response) {
+          console.log('request in progress, returning pending request');
+        }
+    return cachedResponse.response ? of(cachedResponse.response) : cachedResponse.request$;
   }
-  return request$.pipe(tap(response => {
-    cache.set(actionAsString, {timestamp: Date.now(), response});
-  }));
+  // caching only pending request without response, indicating that request is in progress.
+  cache.set(actionAsString, {timestamp: Date.now(), request$});
+  return request$.pipe(
+    tap(response => {
+      cache.set(actionAsString, {timestamp: Date.now(), response});
+    }),
+    catchError((error) => {
+      cache.delete(actionAsString);
+      return throwError(error);
+    })
+ );
+  
 }

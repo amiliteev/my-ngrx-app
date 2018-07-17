@@ -2,9 +2,11 @@ import {Component, OnInit} from '@angular/core';
 import {Select} from 'ngrx-actions';
 import {Observable} from 'rxjs';
 import {LinkType, ProductLink} from '../api/protos';
-import {MatTableDataSource} from '@angular/material';
+import {MatTableDataSource, MatDialog} from '@angular/material';
 import {Store} from '@ngrx/store';
-import {DeleteProductLink, FetchProductLinks, UpdateProductLink} from '../state/global/global.actions';
+import {DeleteProductLink, FetchProductLinks, UpdateProductLink} from '../state/config/config.actions';
+import { NewProductLinkComponent } from './new-product-link.component';
+import { FetchGaAccountHeaders } from '../state/analytics/analytics.actions';
 
 @Component({
   selector: 'app-product-linking',
@@ -13,14 +15,14 @@ import {DeleteProductLink, FetchProductLinks, UpdateProductLink} from '../state/
 })
 export class ProductLinkingContainerComponent implements OnInit {
 
-  @Select(({global}) => global.productLinks)
+  @Select(({config}) => config.productLinks)
   productLinks$: Observable<ProductLink[]>;
 
   dataSource: MatTableDataSource<ProductLink>;
 
   readonly LinkType = LinkType;
 
-  constructor(private readonly store: Store<any>) {
+  constructor(private readonly store: Store<any>, private readonly dialog: MatDialog) {
     this.productLinks$.subscribe((productLinks) => {
       this.dataSource = new MatTableDataSource<ProductLink>(productLinks);
     });
@@ -44,7 +46,11 @@ export class ProductLinkingContainerComponent implements OnInit {
   }
 
   addProductLink() {
-    console.log('add product link');
+    this.dialog.open(NewProductLinkComponent);
+  }
+
+  actionsForProgressBar(): string[] {
+    return [FetchProductLinks.TYPE, UpdateProductLink.TYPE, DeleteProductLink.TYPE];
   }
 
 }

@@ -1,0 +1,64 @@
+<h2 mat-dialog-title>New Product Link</h2>
+
+<mat-dialog-content>
+  <ng-container *ngIf="currentView === View.ACCOUNTS">
+    <h3>Select Account</h3>
+    <app-progress-bar [actions]="actionsForAccountsProgressBar()"></app-progress-bar>
+    <mat-table [dataSource]="accountsDataSource" matSort>
+
+      <ng-container matColumnDef="icon">
+        <mat-header-cell *matHeaderCellDef class="icon">Type</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="icon">
+          <img src="/assets/ga.png">
+        </mat-cell>
+      </ng-container>
+    
+      <ng-container matColumnDef="accountId">
+        <mat-header-cell *matHeaderCellDef class="account-id">ID</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="account-id"> {{row.accountId}} </mat-cell>
+      </ng-container>
+    
+      <ng-container matColumnDef="accountName">
+        <mat-header-cell *matHeaderCellDef class="account-name">Name</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="account-name"> {{row.accountName}} </mat-cell>
+      </ng-container>
+    
+      <mat-header-row *matHeaderRowDef="['icon', 'accountId', 'accountName']"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: ['icon', 'accountId', 'accountName']" 
+               (click)="accountSelected(row)">
+      </mat-row>
+    </mat-table>
+  </ng-container>
+  <ng-container *ngIf="currentView === View.PROPERTIES">
+    <h3>Select Property</h3>
+    <app-progress-bar [actions]="actionsForPropertiesProgressBar()"></app-progress-bar>
+    <mat-table [dataSource]="propertiesDataSource" matSort>
+      <ng-container matColumnDef="icon">
+        <mat-header-cell *matHeaderCellDef class="icon">Type</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="icon">
+          <img src="/assets/ga.png">
+        </mat-cell>
+      </ng-container>
+    
+      <ng-container matColumnDef="propertyId">
+        <mat-header-cell *matHeaderCellDef class="property-id">ID</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="property-id"> {{row.propertyId}} </mat-cell>
+      </ng-container>
+    
+      <ng-container matColumnDef="propertyName">
+        <mat-header-cell *matHeaderCellDef class="property-name">Name</mat-header-cell>
+        <mat-cell *matCellDef="let row" class="property-name"> {{row.propertyName}} </mat-cell>
+      </ng-container>
+    
+      <mat-header-row *matHeaderRowDef="['icon', 'propertyId', 'propertyName']"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: ['icon', 'propertyId', 'propertyName']" 
+                (click)="propertySelected(row)">
+      </mat-row>
+    </mat-table>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button mat-button *ngIf="currentView === View.PROPERTIES" (click)="backToAccounts()">Back</button>
+  <button mat-button matDialogClose (click)="close()">Close</button>
+</mat-dialog-actions>

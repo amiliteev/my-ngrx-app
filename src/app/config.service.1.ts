@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Observable, of, throwError} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {LinkType, ProductLink} from './api/protos';
 import {randomDelay} from './misc.utils';
 import { tap } from 'rxjs/operators';
@@ -34,7 +34,6 @@ export class ConfigService {
   constructor() { }
 
   getProductLinks(): Observable<ProductLink[]> {
-    if (Math.random() < 0.499) return throwError('Service error'); 
     return of([...productLinks]).pipe(randomDelay(), tap(x => console.log('received product link')));
   }
 
@@ -53,11 +52,6 @@ export class ConfigService {
     if (existingIndex >= 0) {
       productLinks.splice(existingIndex, 1);
     }
-    return of(productLink).pipe(randomDelay());
-  }
-
-  createProductLink(productLink: ProductLink): Observable<ProductLink> {
-    productLinks.push(productLink);
     return of(productLink).pipe(randomDelay());
   }
 

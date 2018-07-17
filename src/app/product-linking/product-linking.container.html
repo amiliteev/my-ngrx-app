@@ -3,6 +3,7 @@
   <mat-icon>sync</mat-icon>
 </button>
 </h3>
+<app-progress-bar [actions]="actionsForProgressBar()"></app-progress-bar>
 <mat-table [dataSource]="dataSource" matSort>
 
   <ng-container matColumnDef="icon">

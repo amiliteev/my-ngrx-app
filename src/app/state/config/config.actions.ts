@@ -1,23 +1,13 @@
 import {ProductLink} from '../../api/protos';
 import {Entity} from '../../misc.utils';
-
-export class RequestAction {
-  readonly entity: Entity;
-  readonly type: string;
-  readonly cacheable: boolean;
-  readonly cacheExpiresInSeconds?: number;
-}
-
-export class RequestSuccess {
-  type = 'Request Success';
-  constructor (readonly forAction: RequestAction) {}
-}
+import { RequestAction, PostAction } from '../shared/shared.actions';
 
 export class FetchProductLinks extends RequestAction {
+  static readonly TYPE = 'Fetch Product Links';
   readonly entity = Entity.PRODUCT_LINK;
-  readonly type = 'Fetch Product Links';
+  readonly type = FetchProductLinks.TYPE;
   readonly cacheable = true;
-  readonly cacheExpiresInSeconds = 15;
+  readonly cacheExpiresInSeconds = 5;
 }
 
 export class FetchProductLinksSuccess {
@@ -26,8 +16,9 @@ export class FetchProductLinksSuccess {
 }
 
 export class UpdateProductLink extends RequestAction {
+  static readonly TYPE = 'Update Product Link';
   readonly entity = Entity.PRODUCT_LINK;
-  readonly type = 'Update Product Link';
+  readonly type = UpdateProductLink.TYPE;
   readonly cacheable = false;
   constructor (readonly payload: ProductLink) {
     super();
@@ -40,8 +31,9 @@ export class UpdateProductLinksSuccess {
 }
 
 export class DeleteProductLink extends RequestAction {
+  static readonly TYPE = 'Delete Product Link';
   readonly entity = Entity.PRODUCT_LINK;
-  readonly type = 'Delete Product Link';
+  readonly type = DeleteProductLink.TYPE;
   readonly cacheable = false;
   constructor (readonly payload: ProductLink) {
     super();
@@ -52,3 +44,19 @@ export class DeleteProductLinksSuccess {
   readonly type = 'Delete Product Link Success';
   constructor (readonly payload: ProductLink) {}
 }
+
+export class CreateProductLink extends RequestAction {
+  static readonly TYPE = 'Create Product Link';
+  readonly entity = Entity.PRODUCT_LINK;
+  readonly type = CreateProductLink.TYPE;
+  readonly cacheable = false;
+  constructor (readonly payload: ProductLink, readonly postAction: PostAction) {
+    super();
+  }
+}
+
+export class CreateProductLinksSuccess {
+  readonly type = 'Create Product Link Success';
+  constructor (readonly payload: ProductLink) {}
+}
+

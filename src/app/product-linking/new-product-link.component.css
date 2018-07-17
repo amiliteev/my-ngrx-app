@@ -1,0 +1,27 @@
+mat-dialog-actions {
+  justify-content: flex-end;  
+}
+
+mat-dialog-content {
+  min-width: 500px;
+}
+
+.icon {
+  flex: 1;
+}
+
+.account-id, .property-id {
+  flex: 2;
+}
+
+.account-name, .property-name {
+  flex: 4;
+}
+
+mat-row {
+  cursor: pointer;
+}
+
+mat-row:hover {
+  background: #eee;
+}

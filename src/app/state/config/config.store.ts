@@ -1,57 +1,37 @@
 import {Action, Effect, ofAction, Store} from 'ngrx-actions';
-import {concatMap, flatMap, map, mergeMap, switchMap} from 'rxjs/operators';
-import {Injectable} from '@angular/core';
-import {Actions} from '@ngrx/effects';
+import {concatMap, flatMap, map, mergeMap, switchMap, catchError} from 'rxjs/operators';
 import {
   DeleteProductLink, DeleteProductLinksSuccess,
   FetchProductLinks,
   FetchProductLinksSuccess,
-  RequestAction,
-  RequestSuccess,
   UpdateProductLink,
-  UpdateProductLinksSuccess
-} from './global.actions';
+  UpdateProductLinksSuccess,
+  CreateProductLink,
+  CreateProductLinksSuccess
+} from './config.actions';
 import {ConfigService} from '../../config.service';
 import {ProductLink} from '../../api/protos';
 import {Observable, of} from 'rxjs';
 import {cacheable, filterFirst} from '../../misc.utils';
+import { RequestSuccess, NO_ACTION, RequestFailure } from '../shared/shared.actions';
+import { AnalyticsService } from '../../analytics.service';
 
-export interface GlobalState {
-  actionsProcessing: string[];
+export interface ConfigState {
   productLinks: ProductLink[];
 }
 
-const DEFAULTS: GlobalState = {
-  actionsProcessing: [],
+const DEFAULTS: ConfigState = {
   productLinks: []
 };
 
-@Store<GlobalState>(DEFAULTS)
-export class GlobalStore {
+@Store<ConfigState>(DEFAULTS)
+export class ConfigStore {
 
   constructor(private readonly configService: ConfigService) {
   }
 
-  @Action(FetchProductLinks, UpdateProductLink, DeleteProductLink)
-  startActionProcessing(state: GlobalState, action: RequestAction) {
-    console.log('about to make request...');
-    return {
-      ...state,
-      actionsProcessing: [...state.actionsProcessing, action.type]
-    };
-  }
-
-  @Action(RequestSuccess)
-  finishActionProcessing(state: GlobalState, action: RequestSuccess) {
-    console.log('request successful.');
-    return {
-      ...state,
-      actionsProcessing: filterFirst(state.actionsProcessing, (s) => s === action.forAction.type)
-    };
-  }
-
   @Action(FetchProductLinksSuccess)
-  productLinkFetched(state: GlobalState, action: FetchProductLinksSuccess) {
+  productLinkFetched(state: ConfigState, action: FetchProductLinksSuccess) {
     console.log('product links fetched.');
     return {
       ...state,
@@ -60,7 +40,7 @@ export class GlobalStore {
   }
 
   @Action(UpdateProductLinksSuccess)
-  productLinkUpdated(state: GlobalState, action: UpdateProductLinksSuccess) {
+  productLinkUpdated(state: ConfigState, action: UpdateProductLinksSuccess) {
     console.log('product link updated.');
     return {
       ...state,
@@ -71,7 +51,7 @@ export class GlobalStore {
   }
 
   @Action(DeleteProductLinksSuccess)
-  productLinkDeleted(state: GlobalState, action: DeleteProductLinksSuccess) {
+  productLinkDeleted(state: ConfigState, action: DeleteProductLinksSuccess) {
     console.log('product link deleted.');
     return {
       ...state,
@@ -82,24 +62,34 @@ export class GlobalStore {
   }
 
   @Effect(FetchProductLinks)
-  fetchProductLinks(state: GlobalState, action: FetchProductLinks): Observable<any> {
+  fetchProductLinks(state: ConfigState, action: FetchProductLinks): Observable<any> {
     console.log('fetching product links...');
     return cacheable(action, this.configService.getProductLinks()).pipe(
-      switchMap(res => of(new RequestSuccess(action), new FetchProductLinksSuccess(res))));
+      switchMap(res => of(new RequestSuccess(action), new FetchProductLinksSuccess(res))),
+      catchError(() => of(new RequestFailure(action)))
+    );
   }
 
   @Effect(UpdateProductLink)
-  updateProductLinks(state: GlobalState, action: UpdateProductLink): Observable<any> {
+  updateProductLinks(state: ConfigState, action: UpdateProductLink): Observable<any> {
     console.log('updating product link...');
     return cacheable(action, this.configService.updateProductLink(action.payload)).pipe(
       switchMap(res => of(new RequestSuccess(action), new UpdateProductLinksSuccess(res))));
   }
 
   @Effect(DeleteProductLink)
-  deleteProductLinks(state: GlobalState, action: DeleteProductLink): Observable<any> {
+  deleteProductLinks(state: ConfigState, action: DeleteProductLink): Observable<any> {
     console.log('delete product link...');
     return cacheable(action, this.configService.deleteProductLink(action.payload)).pipe(
       switchMap(res => of(new RequestSuccess(action), new DeleteProductLinksSuccess(res))));
+  }
+
+  @Effect(CreateProductLink)
+  createProductLinks(state: ConfigState, action: CreateProductLink): Observable<any> {
+    console.log('creating product link...');
+    return cacheable(action, this.configService.createProductLink(action.payload)).pipe(
+      switchMap(res => of(new RequestSuccess(action), new CreateProductLinksSuccess(res), 
+        action.postAction.onSuccess || NO_ACTION)));
   }
 
 }
