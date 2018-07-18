@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Observable, of, throwError} from 'rxjs';
+import {Observable, of, throwError, empty} from 'rxjs';
 import {LinkType, ProductLink} from './api/protos';
 import {randomDelay} from './misc.utils';
 import { tap } from 'rxjs/operators';
@@ -59,6 +59,10 @@ export class ConfigService {
   createProductLink(productLink: ProductLink): Observable<ProductLink> {
     productLinks.push(productLink);
     return of(productLink).pipe(randomDelay());
+  }
+
+  doNothingWithDelay(): Observable<void> {
+    return of(undefined).pipe(randomDelay());
   }
 
 }

@@ -1,5 +1,5 @@
 import {Action, Effect, ofAction, Store} from 'ngrx-actions';
-import {concatMap, flatMap, map, mergeMap, switchMap, catchError} from 'rxjs/operators';
+import {concatMap, flatMap, map, mergeMap, switchMap, catchError, tap} from 'rxjs/operators';
 import {
   DeleteProductLink, DeleteProductLinksSuccess,
   FetchProductLinks,
@@ -7,7 +7,9 @@ import {
   UpdateProductLink,
   UpdateProductLinksSuccess,
   CreateProductLink,
-  CreateProductLinksSuccess
+  CreateProductLinksSuccess,
+  ActionA,
+  ActionB
 } from './config.actions';
 import {ConfigService} from '../../config.service';
 import {ProductLink} from '../../api/protos';
@@ -90,6 +92,13 @@ export class ConfigStore {
     return cacheable(action, this.configService.createProductLink(action.payload)).pipe(
       switchMap(res => of(new RequestSuccess(action), new CreateProductLinksSuccess(res), 
         action.postAction.onSuccess || NO_ACTION)));
+  }
+
+  @Effect(ActionA, ActionB)
+  actionA(state: ConfigState, action: ActionA|ActionB): Observable<any> {
+    return this.configService.doNothingWithDelay().pipe(
+      tap((res) => console.log(`Action ${action.type} is complete`)),
+      switchMap((res) => of(action.postAction)));
   }
 
 }

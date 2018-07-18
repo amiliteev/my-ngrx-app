@@ -1,7 +1,12 @@
 <h3>Product links count: {{(productLinks$ | async).length}}
-<button mat-icon-button class="sync" (click)="fetchProductLinks()">
-  <mat-icon>sync</mat-icon>
-</button>
+  <div class="buttons">
+  <button mat-icon-button class="sync" (click)="fetchProductLinks()">
+    <mat-icon>sync</mat-icon>
+  </button>
+  <button mat-icon-button class="sync" (click)="multiAction()">
+    <mat-icon>check</mat-icon>
+  </button>
+</div>
 </h3>
 <app-progress-bar [actions]="actionsForProgressBar()"></app-progress-bar>
 <mat-table [dataSource]="dataSource" matSort>

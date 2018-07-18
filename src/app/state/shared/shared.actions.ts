@@ -37,3 +37,14 @@ export class UiEventAction {
   readonly type = 'UI Event';
   constructor(readonly uiEvent: UiEvent) {}
 }
+
+export class MultiAction {
+  type = 'Multi Action';
+  constructor (readonly actions: {type: string, postAction?: PostAction}[], 
+    readonly postAction: PostAction) {}
+}
+
+export class UnregisterFromMultiAction {
+  type = 'Unregister from multi action';
+  constructor (readonly multiAction: MultiAction, readonly action: {type: string}) {}
+}

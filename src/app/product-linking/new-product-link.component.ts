@@ -20,6 +20,7 @@ function gaPropertiesForSelectedAccount(
   productLinkingView: ProductLinkingViewState,
   analytics: AnalyticsState): GaProperty[] 
 {
+  console.log('gaPropertiesForSelectedAccount');
   if (!productLinkingView.selectedAccountId) { return []; }
   const account = analytics.gaAccountHeaders.find(
     (account) => account.accountId === productLinkingView.selectedAccountId);

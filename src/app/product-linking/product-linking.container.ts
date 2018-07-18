@@ -4,9 +4,10 @@ import {Observable} from 'rxjs';
 import {LinkType, ProductLink} from '../api/protos';
 import {MatTableDataSource, MatDialog} from '@angular/material';
 import {Store} from '@ngrx/store';
-import {DeleteProductLink, FetchProductLinks, UpdateProductLink} from '../state/config/config.actions';
+import {DeleteProductLink, FetchProductLinks, UpdateProductLink, ActionA, ActionB} from '../state/config/config.actions';
 import { NewProductLinkComponent } from './new-product-link.component';
 import { FetchGaAccountHeaders } from '../state/analytics/analytics.actions';
+import { MultiAction, UiEventAction, ShowSnackBar } from '../state/shared/shared.actions';
 
 @Component({
   selector: 'app-product-linking',
@@ -51,6 +52,12 @@ export class ProductLinkingContainerComponent implements OnInit {
 
   actionsForProgressBar(): string[] {
     return [FetchProductLinks.TYPE, UpdateProductLink.TYPE, DeleteProductLink.TYPE];
+  }
+
+  multiAction() {
+    console.log('launching multi action');
+    this.store.dispatch(new MultiAction([new ActionA(), new ActionB()], 
+      {onSuccess: new UiEventAction(new ShowSnackBar('Multi action is complete'))}));
   }
 
 }

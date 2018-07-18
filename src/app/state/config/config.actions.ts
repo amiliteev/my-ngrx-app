@@ -60,3 +60,12 @@ export class CreateProductLinksSuccess {
   constructor (readonly payload: ProductLink) {}
 }
 
+export class ActionA {
+  readonly type = 'Action A';
+  constructor (readonly postAction?: PostAction) {}
+}
+
+export class ActionB {
+  readonly type = 'Action B';
+  constructor (readonly postAction?: PostAction) {}
+}

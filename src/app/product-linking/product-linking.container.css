@@ -16,7 +16,7 @@ h3 {
   margin: 16px;
 }
 
-button.sync {
+div.buttons {
   position: absolute;
   top: -12px;
   right: 0;
