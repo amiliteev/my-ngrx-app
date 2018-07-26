@@ -41,7 +41,10 @@ class ProductLinkCreated {
 })
 export class NewProductLinkComponent implements OnInit, OnDestroy {
 
-  View = View;
+  readonly SELECT_ACCOUNT = 'SELECT_ACCOUNT';
+  readonly SELECT_PROPERTY = 'SELECT_PROPERTY';
+
+  readonly View = View;
 
   currentView = View.ACCOUNTS;
 
@@ -62,7 +65,7 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
   selectedAccount: GaAccountHeader;
 
   constructor(
-    readonly dialogRef: MatDialogRef<NewProductLinkComponent>,
+    readonly dialogRef: MatDialogRef<NewProductLinkComponent, boolean>,
     readonly store: Store<any>) {
       this.gaAccountHeaders$.pipe(takeUntil(this.onDestroy$)).subscribe((gaAccountHeaders) => {
         this.accountsDataSource = new MatTableDataSource<GaAccountHeader>(gaAccountHeaders);
@@ -79,14 +82,16 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
 
   private handleUiEvent(uiEvent: UiEvent) {
     if (uiEvent instanceof ProductLinkCreated) {
-      this.dialogRef.close();
+      this.dialogRef.close(true);
       this.store.dispatch(new UiEventAction(new ShowSnackBar(uiEvent.productLinkName + ' successfully created')));
-      this.store.dispatch(new FetchProductLinks());
     }
   }
 
   private loadAccounts() {
-    this.store.dispatch(new FetchGaAccountHeaders({onSuccess: new PreFetchGaProperties()}));
+    this.store.dispatch({
+      ...new FetchGaAccountHeaders({onSuccess: new PreFetchGaProperties()}), 
+      progressBarKey: this.SELECT_ACCOUNT
+    });
   }
 
   ngOnDestroy() {
@@ -113,7 +118,10 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
 
   accountSelected(account: GaAccountHeader) {
     this.store.dispatch(new SelectAccount(account.accountId));
-    this.store.dispatch(new FetchGaProperties(account.propertyIds));
+    this.store.dispatch({
+      ...new FetchGaProperties(account.propertyIds),
+      progressBarKey: this.SELECT_PROPERTY
+    });
     this.currentView = View.PROPERTIES;
   }
 
@@ -125,8 +133,11 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
       linkType: LinkType.GA,
       productLinkName: 'Link to ' + property.propertyName,
     }
-    this.store.dispatch(new CreateProductLink(productLink, 
-      {onSuccess: new UiEventAction(new ProductLinkCreated(productLink.productLinkName))}));
+    this.store.dispatch({
+      ...new CreateProductLink(productLink, 
+        {onSuccess: new UiEventAction(new ProductLinkCreated(productLink.productLinkName))}),
+      progressBarKey: this.SELECT_PROPERTY
+    });
   }
 
 }

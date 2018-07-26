@@ -10,11 +10,13 @@ export interface SharedState {
   actionsProcessing: string[];
   uiEvent?: UiEvent;
   multiActions: {type: string}[];
+  activeProgressBars: string[];
 }
 
 const DEFAULTS: SharedState = {
   actionsProcessing: [],
   multiActions: [],
+  activeProgressBars: []
 };
 
 @Store<SharedState>(DEFAULTS)
@@ -23,10 +25,11 @@ export class SharedStore {
   @Action(FetchProductLinks, UpdateProductLink, DeleteProductLink, CreateProductLink,
           FetchGaAccountHeaders, FetchGaProperties)
   startActionProcessing(state: SharedState, action: RequestAction) {
-    // console.log('about to make request...');
+    console.log('about to make request...');
     return {
       ...state,
-      actionsProcessing: [...state.actionsProcessing, action.type]
+      actionsProcessing: [...state.actionsProcessing, action.type],
+      activeProgressBars: [...state.activeProgressBars, ...(action.progressBarKey ? [action.progressBarKey] : [])]
     };
   }
 
@@ -35,7 +38,8 @@ export class SharedStore {
     // console.log('request successful.');
     return {
       ...state,
-      actionsProcessing: filterFirst(state.actionsProcessing, (s) => s === action.forAction.type)
+      actionsProcessing: filterFirst(state.actionsProcessing, (s) => s === action.forAction.type),
+      activeProgressBars: filterFirst(state.activeProgressBars, (s) => s === action.forAction.progressBarKey)
     };
   }
 

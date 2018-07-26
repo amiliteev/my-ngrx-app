@@ -9,11 +9,12 @@ export const NO_ACTION = {
   type: 'No Action'
 }
 
-export class RequestAction {
+export class RequestAction {  
   readonly entity: Entity;
   readonly type: string;
   readonly cacheable: boolean;
   readonly cacheExpiresInSeconds?: number;
+  readonly progressBarKey?: string;
 }
 
 export class RequestSuccess {

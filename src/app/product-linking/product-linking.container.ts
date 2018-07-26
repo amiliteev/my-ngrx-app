@@ -16,6 +16,8 @@ import { MultiAction, UiEventAction, ShowSnackBar } from '../state/shared/shared
 })
 export class ProductLinkingContainerComponent implements OnInit {
 
+  readonly PRODUCT_LINKING_PAGE = 'PRODUCT_LINKING_PAGE';
+
   @Select(({config}) => config.productLinks)
   productLinks$: Observable<ProductLink[]>;
 
@@ -30,7 +32,7 @@ export class ProductLinkingContainerComponent implements OnInit {
   }
 
   fetchProductLinks() {
-    this.store.dispatch(new FetchProductLinks());
+    this.store.dispatch({...new FetchProductLinks(), progressBarKey: this.PRODUCT_LINKING_PAGE});
   }
 
   ngOnInit() {
@@ -47,7 +49,9 @@ export class ProductLinkingContainerComponent implements OnInit {
   }
 
   addProductLink() {
-    this.dialog.open(NewProductLinkComponent);
+    this.dialog.open(NewProductLinkComponent).afterClosed().subscribe(((dialogResult) => {
+      if (dialogResult) { this.fetchProductLinks(); }
+    }));
   }
 
   actionsForProgressBar(): string[] {

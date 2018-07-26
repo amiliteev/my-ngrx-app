@@ -89,6 +89,7 @@ export class ConfigStore {
   @Effect(CreateProductLink)
   createProductLinks(state: ConfigState, action: CreateProductLink): Observable<any> {
     console.log('creating product link...');
+    console.log(action);
     return cacheable(action, this.configService.createProductLink(action.payload)).pipe(
       switchMap(res => of(new RequestSuccess(action), new CreateProductLinksSuccess(res), 
         action.postAction.onSuccess || NO_ACTION)));

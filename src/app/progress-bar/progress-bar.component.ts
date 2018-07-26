@@ -13,14 +13,23 @@ export class ProgressBarComponent implements OnInit {
   @Select(({shared}) => shared.actionsProcessing)
   actionsProcessing$: Observable<string[]>;
 
+  @Select(({shared}) => shared.activeProgressBars)
+  activeProgressBars$: Observable<string[]>;
+
   @Input()
   actions: string[] = [];
+
+  @Input()
+  key: '';
 
   isProcessing$: Observable<boolean>;
 
   constructor() { 
-    this.isProcessing$ = this.actionsProcessing$.pipe(
-      map(actionsProcessing => this.actions.some(action => actionsProcessing.includes(action)))
+    // this.isProcessing$ = this.actionsProcessing$.pipe(
+    //   map(actionsProcessing => this.actions.some(action => actionsProcessing.includes(action)))
+    // );
+    this.isProcessing$ = this.activeProgressBars$.pipe(
+      map(activeProgressBars => activeProgressBars.includes(this.key))
     );
   }
 

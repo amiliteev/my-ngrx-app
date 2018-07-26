@@ -3,7 +3,7 @@
 <mat-dialog-content>
   <ng-container *ngIf="currentView === View.ACCOUNTS">
     <h3>Select Account</h3>
-    <app-progress-bar [actions]="actionsForAccountsProgressBar()"></app-progress-bar>
+    <app-progress-bar [key]="SELECT_ACCOUNT"></app-progress-bar>
     <mat-table [dataSource]="accountsDataSource" matSort>
 
       <ng-container matColumnDef="icon">
@@ -31,7 +31,7 @@
   </ng-container>
   <ng-container *ngIf="currentView === View.PROPERTIES">
     <h3>Select Property</h3>
-    <app-progress-bar [actions]="actionsForPropertiesProgressBar()"></app-progress-bar>
+    <app-progress-bar [key]="SELECT_PROPERTY"></app-progress-bar>
     <mat-table [dataSource]="propertiesDataSource" matSort>
       <ng-container matColumnDef="icon">
         <mat-header-cell *matHeaderCellDef class="icon">Type</mat-header-cell>
