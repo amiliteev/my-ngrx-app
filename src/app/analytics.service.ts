@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {GaAccountHeader} from './api/protos';
 import {Observable, of} from 'rxjs';
-import {randomDelay} from './misc.utils';
+import {randomDelay, cacheHttpRequest} from './misc.utils';
 
 const gaAccountHeaders: GaAccountHeader[] = [
   {
@@ -53,12 +53,12 @@ export class AnalyticsService {
   constructor() { }
 
   getAccountHeaders(): Observable<GaAccountHeader[]> {
-    return of(gaAccountHeaders).pipe(randomDelay());
+    return cacheHttpRequest('/account-headers', 10, of(gaAccountHeaders).pipe(randomDelay()));
   }
 
   getProperties(propertyIds: number[]) {
     const properties = propertyIds.reduce((result, propertyId) => [...result, gaProperties[propertyId]], []);
-    return of(properties).pipe(randomDelay());
+    return cacheHttpRequest(`/properties/${JSON.stringify(properties)}`, 10, of(properties).pipe(randomDelay()));
   }
 
 }

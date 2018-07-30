@@ -5,8 +5,6 @@ import {MatTableModule} from '@angular/material';
 import {MaterialModule} from '../material.module';
 import { NewProductLinkComponent } from './new-product-link.component';
 import { ProgressBarModule } from '../progress-bar/progress-bar.module';
-import { NgrxActionsModule } from 'ngrx-actions';
-import { ProductLinkingViewStore } from './product-linking.store';
 import { StoreModule } from '@ngrx/store';
 
 @NgModule({
@@ -16,7 +14,6 @@ import { StoreModule } from '@ngrx/store';
     MatTableModule,
     ProgressBarModule,
   ],
-  providers: [ProductLinkingViewStore],
   declarations: [ProductLinkingContainerComponent, NewProductLinkComponent],
   exports: [ProductLinkingContainerComponent],
   entryComponents: [NewProductLinkComponent],

@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {Select} from 'ngrx-actions';
 import {Observable} from 'rxjs';
 import {LinkType, ProductLink} from '../api/protos';
 import {MatTableDataSource, MatDialog} from '@angular/material';
@@ -8,6 +7,7 @@ import {DeleteProductLink, FetchProductLinks, UpdateProductLink, ActionA, Action
 import { NewProductLinkComponent } from './new-product-link.component';
 import { FetchGaAccountHeaders } from '../state/analytics/analytics.actions';
 import { MultiAction, UiEventAction, ShowSnackBar } from '../state/shared/shared.actions';
+import * as fromConfig from '../state/config/config.reducer';
 
 @Component({
   selector: 'app-product-linking',
@@ -18,14 +18,14 @@ export class ProductLinkingContainerComponent implements OnInit {
 
   readonly PRODUCT_LINKING_PAGE = 'PRODUCT_LINKING_PAGE';
 
-  @Select(({config}) => config.productLinks)
   productLinks$: Observable<ProductLink[]>;
 
   dataSource: MatTableDataSource<ProductLink>;
 
   readonly LinkType = LinkType;
 
-  constructor(private readonly store: Store<any>, private readonly dialog: MatDialog) {
+  constructor(private readonly store: Store<{}>, private readonly dialog: MatDialog) {
+    this.productLinks$ = store.select(fromConfig.getProductLinks);
     this.productLinks$.subscribe((productLinks) => {
       this.dataSource = new MatTableDataSource<ProductLink>(productLinks);
     });
@@ -41,21 +41,19 @@ export class ProductLinkingContainerComponent implements OnInit {
 
   toggleEnabled(productLink: ProductLink) {
     this.store.dispatch(
-        new UpdateProductLink({...productLink, enabled: !productLink.enabled}));
+        {...new UpdateProductLink({...productLink, enabled: !productLink.enabled}), 
+         progressBarKey: this.PRODUCT_LINKING_PAGE});
   }
 
   deleteRow(productLink: ProductLink) {
-    this.store.dispatch(new DeleteProductLink(productLink));
+    this.store.dispatch({...new DeleteProductLink(productLink),
+      progressBarKey: this.PRODUCT_LINKING_PAGE});
   }
 
   addProductLink() {
     this.dialog.open(NewProductLinkComponent).afterClosed().subscribe(((dialogResult) => {
       if (dialogResult) { this.fetchProductLinks(); }
     }));
-  }
-
-  actionsForProgressBar(): string[] {
-    return [FetchProductLinks.TYPE, UpdateProductLink.TYPE, DeleteProductLink.TYPE];
   }
 
   multiAction() {

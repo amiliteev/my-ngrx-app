@@ -1,62 +1,54 @@
 import {ProductLink} from '../../api/protos';
 import {Entity} from '../../misc.utils';
-import { RequestAction, PostAction } from '../shared/shared.actions';
+import { RequestAction, PostAction, WithPayload } from '../shared/shared.actions';
 
-export class FetchProductLinks extends RequestAction {
-  static readonly TYPE = 'Fetch Product Links';
-  readonly entity = Entity.PRODUCT_LINK;
-  readonly type = FetchProductLinks.TYPE;
-  readonly cacheable = true;
-  readonly cacheExpiresInSeconds = 5;
+export enum ConfigActionTypes {
+  FETCH_PRODUCT_LINKS = 'Fetch Product Links',
+  FETCH_PRODUCT_LINKS_SUCCESS = 'Fetch Product Links Success',
+  CREATE_PRODUCT_LINK = 'Create Product Link', 
+  CREATE_PRODUCT_LINK_SUCCESS = 'Create Product Link Success', 
+  UPDATE_PRODUCT_LINK = 'Update Product Link', 
+  UPDATE_PRODUCT_LINK_SUCCESS = 'Update Product Link Success', 
+  DELETE_PRODUCT_LINK = 'Delete Product Link', 
+  DELETE_PRODUCT_LINK_SUCCESS = 'Delete Product Link Success', 
+}
+
+export class FetchProductLinks implements RequestAction {
+  readonly type: ConfigActionTypes.FETCH_PRODUCT_LINKS = ConfigActionTypes.FETCH_PRODUCT_LINKS;
 }
 
 export class FetchProductLinksSuccess {
-  readonly type = 'Fetch Product Links Success';
+  readonly type: ConfigActionTypes.FETCH_PRODUCT_LINKS_SUCCESS = ConfigActionTypes.FETCH_PRODUCT_LINKS_SUCCESS;
   constructor (readonly productLinks: ProductLink[]) {}
 }
 
-export class UpdateProductLink extends RequestAction {
-  static readonly TYPE = 'Update Product Link';
-  readonly entity = Entity.PRODUCT_LINK;
-  readonly type = UpdateProductLink.TYPE;
-  readonly cacheable = false;
-  constructor (readonly payload: ProductLink) {
-    super();
-  }
-}
-
-export class UpdateProductLinksSuccess {
-  readonly type = 'Update Product Link Success';
+export class UpdateProductLink implements RequestAction, WithPayload<ProductLink> {
+  readonly type: ConfigActionTypes.UPDATE_PRODUCT_LINK = ConfigActionTypes.UPDATE_PRODUCT_LINK;
   constructor (readonly payload: ProductLink) {}
 }
 
-export class DeleteProductLink extends RequestAction {
-  static readonly TYPE = 'Delete Product Link';
-  readonly entity = Entity.PRODUCT_LINK;
-  readonly type = DeleteProductLink.TYPE;
-  readonly cacheable = false;
-  constructor (readonly payload: ProductLink) {
-    super();
-  }
-}
-
-export class DeleteProductLinksSuccess {
-  readonly type = 'Delete Product Link Success';
+export class UpdateProductLinksSuccess implements WithPayload<ProductLink> {
+  readonly type: ConfigActionTypes.UPDATE_PRODUCT_LINK_SUCCESS = ConfigActionTypes.UPDATE_PRODUCT_LINK_SUCCESS;
   constructor (readonly payload: ProductLink) {}
 }
 
-export class CreateProductLink extends RequestAction {
-  static readonly TYPE = 'Create Product Link';
-  readonly entity = Entity.PRODUCT_LINK;
-  readonly type = CreateProductLink.TYPE;
-  readonly cacheable = false;
-  constructor (readonly payload: ProductLink, readonly postAction: PostAction) {
-    super();
-  }
+export class DeleteProductLink implements RequestAction, WithPayload<ProductLink> {
+  readonly type: ConfigActionTypes.DELETE_PRODUCT_LINK = ConfigActionTypes.DELETE_PRODUCT_LINK;
+  constructor (readonly payload: ProductLink) {}
+}
+
+export class DeleteProductLinksSuccess implements WithPayload<ProductLink> {
+  readonly type: ConfigActionTypes.DELETE_PRODUCT_LINK_SUCCESS = ConfigActionTypes.DELETE_PRODUCT_LINK_SUCCESS;
+  constructor (readonly payload: ProductLink) {}
+}
+
+export class CreateProductLink implements RequestAction {
+  readonly type: ConfigActionTypes.CREATE_PRODUCT_LINK = ConfigActionTypes.CREATE_PRODUCT_LINK;
+  constructor (readonly payload: ProductLink, readonly postAction: PostAction) {}
 }
 
 export class CreateProductLinksSuccess {
-  readonly type = 'Create Product Link Success';
+  readonly type: ConfigActionTypes.CREATE_PRODUCT_LINK_SUCCESS = ConfigActionTypes.CREATE_PRODUCT_LINK_SUCCESS;
   constructor (readonly payload: ProductLink) {}
 }
 
@@ -69,3 +61,8 @@ export class ActionB {
   readonly type = 'Action B';
   constructor (readonly postAction?: PostAction) {}
 }
+
+export type ConfigActionUnion = FetchProductLinks | FetchProductLinksSuccess | 
+  CreateProductLink | CreateProductLinksSuccess |
+  UpdateProductLink | UpdateProductLinksSuccess | 
+  DeleteProductLink | DeleteProductLinksSuccess;

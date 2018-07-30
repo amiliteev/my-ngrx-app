@@ -1,7 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Select } from 'ngrx-actions';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import * as fromShared from '../state/shared/shared.reducer';
 
 @Component({
   selector: 'app-progress-bar',
@@ -10,10 +11,9 @@ import { map, tap } from 'rxjs/operators';
 })
 export class ProgressBarComponent implements OnInit {
 
-  @Select(({shared}) => shared.actionsProcessing)
-  actionsProcessing$: Observable<string[]>;
+  // @Select(({shared}) => shared.actionsProcessing)
+  // actionsProcessing$: Observable<string[]>;
 
-  @Select(({shared}) => shared.activeProgressBars)
   activeProgressBars$: Observable<string[]>;
 
   @Input()
@@ -24,10 +24,11 @@ export class ProgressBarComponent implements OnInit {
 
   isProcessing$: Observable<boolean>;
 
-  constructor() { 
+  constructor(store: Store<{}>) { 
     // this.isProcessing$ = this.actionsProcessing$.pipe(
     //   map(actionsProcessing => this.actions.some(action => actionsProcessing.includes(action)))
     // );
+    this.activeProgressBars$ = store.select(fromShared.getActiveProgressBars);
     this.isProcessing$ = this.activeProgressBars$.pipe(
       map(activeProgressBars => activeProgressBars.includes(this.key))
     );

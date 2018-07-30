@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import {Store} from '@ngrx/store';
+import {Store, State, select} from '@ngrx/store';
 import {Observable} from 'rxjs';
-import {Select} from 'ngrx-actions';
 import { MatSnackBar } from '@angular/material';
 import { UiEvent, ShowSnackBar } from './state/shared/shared.actions';
+import * as fromShared from './state/shared/shared.reducer';
+
 
 @Component({
   selector: 'app-root',
@@ -13,12 +14,13 @@ import { UiEvent, ShowSnackBar } from './state/shared/shared.actions';
 export class AppComponent {
   title = 'app';
 
-  @Select(({shared}) => shared.uiEvent)
   uiEvent$: Observable<UiEvent>;
-
-  @Select((state) => JSON.stringify(state, null, '  ')) state$: Observable<string>;
+  state$: Observable<string>;
 
   constructor(readonly store: Store<{}>, readonly snackBar: MatSnackBar) {
+    this.uiEvent$ = this.store.pipe(select(fromShared.getUiEvent));
+    this.state$ = this.store.pipe(select((state) => JSON.stringify(state, null, '  ')));
+    //
     this.uiEvent$.subscribe((uiEvent) => this.handleUiEvent(uiEvent));
   }
 

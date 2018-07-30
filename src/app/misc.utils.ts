@@ -34,27 +34,50 @@ function flushEntityCache(entity: Entity) {
   });
 }
 
-export function cacheable<T>(action: RequestAction, request$: Observable<T>): Observable<T> {
-  if (!action.cacheable) {
-    flushEntityCache(action.entity);
-  }
-  const actionAsString = JSON.stringify(action);
-  const cachedResponse = cache.get(actionAsString);
+// export function cacheable<T>(action: RequestAction, request$: Observable<T>): Observable<T> {
+//   if (!action.cacheable) {
+//     flushEntityCache(action.entity);
+//   }
+//   const actionAsString = JSON.stringify(action);
+//   const cachedResponse = cache.get(actionAsString);
+//   if (cachedResponse &&
+//       (Date.now() - cachedResponse.timestamp) / 1000 < action.cacheExpiresInSeconds) {
+//         if (!cachedResponse.response) {
+//           console.log('request in progress, returning pending request');
+//         }
+//     return cachedResponse.response ? of(cachedResponse.response) : cachedResponse.request$;
+//   }
+//   // caching only pending request without response, indicating that request is in progress.
+//   cache.set(actionAsString, {timestamp: Date.now(), request$});
+//   return request$.pipe(
+//     tap(response => {
+//       cache.set(actionAsString, {timestamp: Date.now(), response});
+//     }),
+//     catchError((error) => {
+//       cache.delete(actionAsString);
+//       return throwError(error);
+//     })
+//  );
+  
+// }
+
+export function cacheHttpRequest<T>(query: string, expiresInSeconds: number, request$: Observable<T>): Observable<T> {
+  const cachedResponse = cache.get(query);
   if (cachedResponse &&
-      (Date.now() - cachedResponse.timestamp) / 1000 < action.cacheExpiresInSeconds) {
+      (Date.now() - cachedResponse.timestamp) / 1000 < expiresInSeconds) {
         if (!cachedResponse.response) {
           console.log('request in progress, returning pending request');
         }
     return cachedResponse.response ? of(cachedResponse.response) : cachedResponse.request$;
   }
   // caching only pending request without response, indicating that request is in progress.
-  cache.set(actionAsString, {timestamp: Date.now(), request$});
+  cache.set(query, {timestamp: Date.now(), request$});
   return request$.pipe(
     tap(response => {
-      cache.set(actionAsString, {timestamp: Date.now(), response});
+      cache.set(query, {timestamp: Date.now(), response});
     }),
     catchError((error) => {
-      cache.delete(actionAsString);
+      cache.delete(query);
       return throwError(error);
     })
  );

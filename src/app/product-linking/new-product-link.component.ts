@@ -1,33 +1,19 @@
 import { Component, OnInit, AfterViewInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { MatDialogRef, MatTableDataSource } from '../../../node_modules/@angular/material';
-import { Store } from '@ngrx/store';
+import { Store, select } from '@ngrx/store';
 import { FetchGaAccountHeaders, PreFetchGaProperties, FetchGaProperties } from '../state/analytics/analytics.actions';
 import { GaAccountHeader, GaProperty, ProductLink, LinkType } from '../api/protos';
-import { Select } from 'ngrx-actions';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { SelectAccount, ProductLinkingViewState, SelectProperty } from './product-linking.store';
-import { AnalyticsState } from '../state/analytics/analytics.store';
 import { CreateProductLink, FetchProductLinks } from '../state/config/config.actions';
 import { UiEvent, UiEventAction, ShowSnackBar } from '../state/shared/shared.actions';
+import * as fromShared from '../state/shared/shared.reducer';
+import * as fromAnalytics from '../state/analytics/analytics.reducer';
+import * as fromProductLinking from './product-linking.state';
 
 enum View {
   ACCOUNTS, 
   PROPERTIES,
-}
-
-function gaPropertiesForSelectedAccount(
-  productLinkingView: ProductLinkingViewState,
-  analytics: AnalyticsState): GaProperty[] 
-{
-  console.log('gaPropertiesForSelectedAccount');
-  if (!productLinkingView.selectedAccountId) { return []; }
-  const account = analytics.gaAccountHeaders.find(
-    (account) => account.accountId === productLinkingView.selectedAccountId);
-  if (!account) { return []; }
-  return account.propertyIds.reduce(
-    (result, propertyId) => [...result, analytics.gaProperties.get(propertyId)], [])
-    .filter((property) => property);
 }
 
 class ProductLinkCreated {
@@ -48,33 +34,31 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
 
   currentView = View.ACCOUNTS;
 
-  @Select(({shared}) => shared.uiEvent)
-  uiEvent$: Observable<UiEvent>;
-
-  @Select(({analytics}) => analytics.gaAccountHeaders)
-  gaAccountHeaders$: Observable<GaAccountHeader[]>;
-
-  @Select(({productLinkingView, analytics}) => gaPropertiesForSelectedAccount(productLinkingView, analytics))
-  gaProperties$: Observable<GaProperty[]>;
+  readonly uiEvent$: Observable<UiEvent>;
+  readonly gaAccountHeaders$: Observable<GaAccountHeader[]>;
+  readonly gaProperties$: Observable<GaProperty[]>;
 
   accountsDataSource: MatTableDataSource<GaAccountHeader>;
   propertiesDataSource: MatTableDataSource<GaProperty>;
 
   onDestroy$ = new Subject<void>();
 
-  selectedAccount: GaAccountHeader;
-
   constructor(
     readonly dialogRef: MatDialogRef<NewProductLinkComponent, boolean>,
-    readonly store: Store<any>) {
-      this.gaAccountHeaders$.pipe(takeUntil(this.onDestroy$)).subscribe((gaAccountHeaders) => {
-        this.accountsDataSource = new MatTableDataSource<GaAccountHeader>(gaAccountHeaders);
-      });
-      this.gaProperties$.pipe(takeUntil(this.onDestroy$)).subscribe((gaProperties) => {
-        this.propertiesDataSource = new MatTableDataSource<GaProperty>(gaProperties);
-      });
-      this.uiEvent$.pipe(takeUntil(this.onDestroy$)).subscribe((uiEvent) => this.handleUiEvent(uiEvent));
-    }
+    readonly store: Store<any>) 
+  {
+    this.uiEvent$ = this.store.pipe(select(fromShared.getUiEvent));
+    this.gaAccountHeaders$ = this.store.pipe(select(fromAnalytics.getGaAccountHeaders));
+    this.gaProperties$ = this.store.pipe(select(fromProductLinking.getGaPropertiesForSelectedAccount));
+
+    this.gaAccountHeaders$.pipe(takeUntil(this.onDestroy$)).subscribe((gaAccountHeaders) => {
+      this.accountsDataSource = new MatTableDataSource<GaAccountHeader>(gaAccountHeaders);
+    });
+    this.gaProperties$.pipe(takeUntil(this.onDestroy$)).subscribe((gaProperties) => {
+      this.propertiesDataSource = new MatTableDataSource<GaProperty>(gaProperties);
+    });
+    this.uiEvent$.pipe(takeUntil(this.onDestroy$)).subscribe((uiEvent) => this.handleUiEvent(uiEvent));
+  }
 
   ngOnInit() {
     setTimeout(() => this.loadAccounts());
@@ -103,21 +87,13 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
     console.log('close');
   }
 
-  actionsForAccountsProgressBar() {
-    return [FetchGaAccountHeaders.TYPE];
-  }
-
-  actionsForPropertiesProgressBar() {
-    return [FetchGaProperties.TYPE, CreateProductLink.TYPE];
-  }
-
   backToAccounts() {
     this.loadAccounts();
     this.currentView = View.ACCOUNTS;
   }
 
   accountSelected(account: GaAccountHeader) {
-    this.store.dispatch(new SelectAccount(account.accountId));
+    this.store.dispatch(new fromProductLinking.SelectAccount(account.accountId));
     this.store.dispatch({
       ...new FetchGaProperties(account.propertyIds),
       progressBarKey: this.SELECT_PROPERTY
