@@ -10,25 +10,23 @@ import {StoreDevtoolsModule} from '@ngrx/store-devtools';
 import { environment } from '../environments/environment'; // Angular CLI environemnt
 
 import {ProductLinkingModule} from './product-linking/product-linking.module';
+import {ProductLinkingEffects} from './product-linking/product-linking.effects';
 import {EffectsModule} from '@ngrx/effects';
 import { AnalyticsService } from './analytics.service';
 import { sharedReducer, SHARED_STATE, SharedState } from './state/shared/shared.reducer';
-import { CONFIG_STATE, configReducer } from './state/config/config.reducer';
-import { ConfigEffects } from './state/config/config.effects';
 import { SharedEffects } from './state/shared/shared.effects';
-import { ANALYTICS_STATE, analyticsReducer, AnalyticsState } from './state/analytics/analytics.reducer';
 import { PRODUCT_LINKING_STATE, productLinkingReducer } from './product-linking/product-linking.state';
-import { AnalyticsEffects } from './state/analytics/analytics.effects';
+import { EntityState, ENTITY_STATE, entityReducer } from './state/entities/entities.reducer';
+import { EntitiesEffects } from './state/entities/entities.effects';
 
 export interface AppState {
+  [ENTITY_STATE]: EntityState,
   [SHARED_STATE]: SharedState,
-  [ANALYTICS_STATE]: AnalyticsState
 }
 
 export const reducers: ActionReducerMap<any> = {
+  [ENTITY_STATE]: entityReducer,
   [SHARED_STATE]: sharedReducer,
-  [CONFIG_STATE]: configReducer,
-  [ANALYTICS_STATE]: analyticsReducer,
   [PRODUCT_LINKING_STATE]: productLinkingReducer,
 };
 
@@ -41,7 +39,7 @@ export const reducers: ActionReducerMap<any> = {
     MaterialModule,
     BrowserAnimationsModule,
     StoreModule.forRoot(reducers),
-    EffectsModule.forRoot([ConfigEffects, SharedEffects, AnalyticsEffects]),
+    EffectsModule.forRoot([SharedEffects, EntitiesEffects, ProductLinkingEffects]),
     StoreDevtoolsModule.instrument({
       maxAge: 25, // Retains last 25 states
       logOnly: environment.production, // Restrict extension to log-only mode

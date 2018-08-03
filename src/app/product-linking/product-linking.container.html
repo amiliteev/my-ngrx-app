@@ -35,6 +35,7 @@
       <mat-menu #appMenu="matMenu">
         <button mat-menu-item (click)="toggleEnabled(row)">{{row.enabled ? 'Disable' : 'Enable'}}</button>
         <button mat-menu-item (click)="deleteRow(row)">Delete</button>
+        <button mat-menu-item (click)="refreshRow(row)">Refresh</button>
       </mat-menu>
       <button mat-icon-button [matMenuTriggerFor]="appMenu">
         <mat-icon>more_vert</mat-icon>

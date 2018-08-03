@@ -1,22 +1,46 @@
-import { createFeatureSelector, createSelector } from "@ngrx/store";
-import { getGaProperties, getGaAccountHeaders } from "../state/analytics/analytics.reducer";
+import { createFeatureSelector, createSelector, Action } from "@ngrx/store";
 import { GaProperty, GaAccountHeader } from "../api/protos";
+import { AnalyticsDao } from "../dao/analytics.dao";
+import { EntitySet, findEntityByKey, getEntities, getChildrenByType } from "../state/entities/entities.reducer";
+import { GaAccountHeaderKey } from "../state/entities/keys/ga-account-header.key";
+import { EntityType } from "../state/entities/keys/common";
+import { RequestAction, RequestOptions, ActionWithUid } from "../state/shared/shared.actions";
 
 export const PRODUCT_LINKING_STATE = 'view:product-linking';
 
 export enum ProductLinkingActionTypes {
-  SELECT_ACCOUNT = 'SelectAccount'
+  SELECT_ACCOUNT = 'SelectAccount',
+  PRE_FETCH_GA_PROPERTIES = 'PreFetch GA Properties',
 }
 
 export interface ProductLinkingState {
-  selectedAccountId?: number;
+  selectedAccountKey?: GaAccountHeaderKey;
 }
 
-export type ProductLinkingActionUnion = SelectAccount;
+export type ProductLinkingActionUnion = SelectAccount | PreFetchGaProperties;
 
-export class SelectAccount {
+export class SelectAccount implements Action {
   readonly type: ProductLinkingActionTypes.SELECT_ACCOUNT = ProductLinkingActionTypes.SELECT_ACCOUNT;
-  constructor(readonly accountId: number) {}
+  constructor(readonly accountKey: GaAccountHeaderKey) {}
+}
+
+export class PreFetchGaProperties implements Action {
+  readonly type: ProductLinkingActionTypes.PRE_FETCH_GA_PROPERTIES = 
+    ProductLinkingActionTypes.PRE_FETCH_GA_PROPERTIES;
+}
+
+export class ActionA extends ActionWithUid implements RequestAction {
+  readonly type = 'Action A';
+  constructor (readonly options: RequestOptions) {
+    super();
+  }
+}
+
+export class ActionB extends ActionWithUid implements RequestAction {
+  readonly type = 'Action B';
+  constructor (readonly options: RequestOptions) {
+    super();
+  }
 }
 
 export function productLinkingReducer(
@@ -26,7 +50,7 @@ export function productLinkingReducer(
     case ProductLinkingActionTypes.SELECT_ACCOUNT:
       return {
         ...state,
-        selectedAccountId: action.accountId
+        selectedAccountKey: action.accountKey
       };
     default:
       return state;
@@ -35,20 +59,16 @@ export function productLinkingReducer(
 
 export const getProductLinkingState = createFeatureSelector<ProductLinkingState>(PRODUCT_LINKING_STATE);
 
-export const getSelectedAccountId = createSelector(getProductLinkingState, 
-  (state: ProductLinkingState) => state.selectedAccountId);
+export const getSelectedAccountKey = createSelector(getProductLinkingState, 
+  (state: ProductLinkingState) => state.selectedAccountKey);
 
 export const getGaPropertiesForSelectedAccount = 
-  createSelector(getSelectedAccountId, getGaAccountHeaders, getGaProperties,
-    (selectedAccountId: number, gaAccountHeaders: GaAccountHeader[], gaProperties: Map<number, GaProperty>) => 
-  {
-    console.log('gaPropertiesForSelectedAccount');
-    if (!selectedAccountId) { return []; }
-    const account = gaAccountHeaders.find(
-      (account) => account.accountId === selectedAccountId);
-    if (!account) { return []; }
-    return account.propertyIds.reduce(
-      (result, propertyId) => [...result, gaProperties.get(propertyId)], [])
-      .filter((property) => property);
-  });
+  createSelector(getSelectedAccountKey, AnalyticsDao.getGaAccountHeadersEntitySet, 
+    (selectedAccountKey: GaAccountHeaderKey, gaAccountHeaders: EntitySet<GaAccountHeader>) => 
+{
+  console.log('gaPropertiesForSelectedAccount');
+  if (!selectedAccountKey) { return []; }
+  const accountEntity = findEntityByKey(selectedAccountKey, gaAccountHeaders);
+  return <GaProperty[]>getChildrenByType(accountEntity, EntityType.GA_PROPERTY);
+});
     

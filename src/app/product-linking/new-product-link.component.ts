@@ -1,15 +1,15 @@
 import { Component, OnInit, AfterViewInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { MatDialogRef, MatTableDataSource } from '../../../node_modules/@angular/material';
 import { Store, select } from '@ngrx/store';
-import { FetchGaAccountHeaders, PreFetchGaProperties, FetchGaProperties } from '../state/analytics/analytics.actions';
 import { GaAccountHeader, GaProperty, ProductLink, LinkType } from '../api/protos';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { CreateProductLink, FetchProductLinks } from '../state/config/config.actions';
 import { UiEvent, UiEventAction, ShowSnackBar } from '../state/shared/shared.actions';
 import * as fromShared from '../state/shared/shared.reducer';
-import * as fromAnalytics from '../state/analytics/analytics.reducer';
 import * as fromProductLinking from './product-linking.state';
+import { AnalyticsDao } from '../dao/analytics.dao';
+import { ProductLinkDao } from '../dao/product-link.dao';
+import { getAccountKey } from '../state/entities/keys/ga-account-header.key';
 
 enum View {
   ACCOUNTS, 
@@ -45,10 +45,12 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
 
   constructor(
     readonly dialogRef: MatDialogRef<NewProductLinkComponent, boolean>,
-    readonly store: Store<any>) 
+    readonly store: Store<any>,
+    readonly analyticsDao: AnalyticsDao,
+    readonly productLinkDao: ProductLinkDao) 
   {
     this.uiEvent$ = this.store.pipe(select(fromShared.getUiEvent));
-    this.gaAccountHeaders$ = this.store.pipe(select(fromAnalytics.getGaAccountHeaders));
+    this.gaAccountHeaders$ = this.store.pipe(select(AnalyticsDao.getGaAccountHeaders));
     this.gaProperties$ = this.store.pipe(select(fromProductLinking.getGaPropertiesForSelectedAccount));
 
     this.gaAccountHeaders$.pipe(takeUntil(this.onDestroy$)).subscribe((gaAccountHeaders) => {
@@ -72,10 +74,10 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
   }
 
   private loadAccounts() {
-    this.store.dispatch({
-      ...new FetchGaAccountHeaders({onSuccess: new PreFetchGaProperties()}), 
-      progressBarKey: this.SELECT_ACCOUNT
-    });
+    this.store.dispatch(this.analyticsDao.listGaAccountHeaders({
+      progressBarKey: this.SELECT_ACCOUNT,
+      onSuccess: new fromProductLinking.PreFetchGaProperties()
+    }));
   }
 
   ngOnDestroy() {
@@ -93,27 +95,24 @@ export class NewProductLinkComponent implements OnInit, OnDestroy {
   }
 
   accountSelected(account: GaAccountHeader) {
-    this.store.dispatch(new fromProductLinking.SelectAccount(account.accountId));
-    this.store.dispatch({
-      ...new FetchGaProperties(account.propertyIds),
-      progressBarKey: this.SELECT_PROPERTY
-    });
+    this.store.dispatch(new fromProductLinking.SelectAccount(getAccountKey(account)));
+    this.store.dispatch(this.analyticsDao.fetchGaProperties(account, {progressBarKey: this.SELECT_PROPERTY}));
     this.currentView = View.PROPERTIES;
   }
 
   propertySelected(property: GaProperty) {
     console.log(property);
     const productLink: ProductLink = {
-      accountId: property.accountId,
+      attributionAccountId: 1,
+      gaPropertyId: property.propertyId,
       enabled: true,
       linkType: LinkType.GA,
       productLinkName: 'Link to ' + property.propertyName,
     }
-    this.store.dispatch({
-      ...new CreateProductLink(productLink, 
-        {onSuccess: new UiEventAction(new ProductLinkCreated(productLink.productLinkName))}),
-      progressBarKey: this.SELECT_PROPERTY
-    });
+    this.store.dispatch(this.productLinkDao.createProductLink(productLink, {
+      progressBarKey: this.SELECT_PROPERTY,
+      onSuccess: new UiEventAction(new ProductLinkCreated(productLink.productLinkName)),
+    }));
   }
 
 }

@@ -17,7 +17,7 @@ export interface GaProperty {
   accountId: number;
   propertyId: number;
   propertyName: string;
-  views: GaView[];
+  views?: GaView[];
 }
 
 export interface GaAdwordsLink {
@@ -32,8 +32,9 @@ export enum LinkType {
 
 export interface ProductLink {
   linkType: LinkType;
-  accountId?: number;
+  attributionAccountId: number;
   externalCustomerId?: number;
+  gaPropertyId?: number;
   productLinkName: string;
   enabled: boolean;
 }

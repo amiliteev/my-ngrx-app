@@ -3,11 +3,11 @@ import {Observable} from 'rxjs';
 import {LinkType, ProductLink} from '../api/protos';
 import {MatTableDataSource, MatDialog} from '@angular/material';
 import {Store} from '@ngrx/store';
-import {DeleteProductLink, FetchProductLinks, UpdateProductLink, ActionA, ActionB} from '../state/config/config.actions';
 import { NewProductLinkComponent } from './new-product-link.component';
-import { FetchGaAccountHeaders } from '../state/analytics/analytics.actions';
 import { MultiAction, UiEventAction, ShowSnackBar } from '../state/shared/shared.actions';
-import * as fromConfig from '../state/config/config.reducer';
+import { ProductLinkDao } from '../dao/product-link.dao';
+import { getProductLinkingState, ActionA, ActionB } from './product-linking.state';
+import { getProductLinkKey } from '../state/entities/keys/product-link.key';
 
 @Component({
   selector: 'app-product-linking',
@@ -24,15 +24,18 @@ export class ProductLinkingContainerComponent implements OnInit {
 
   readonly LinkType = LinkType;
 
-  constructor(private readonly store: Store<{}>, private readonly dialog: MatDialog) {
-    this.productLinks$ = store.select(fromConfig.getProductLinks);
+  constructor(private readonly store: Store<{}>, private readonly productLinkDao: ProductLinkDao, 
+    private readonly dialog: MatDialog) 
+  {
+    this.productLinks$ = store.select(ProductLinkDao.getProductLinks);
     this.productLinks$.subscribe((productLinks) => {
       this.dataSource = new MatTableDataSource<ProductLink>(productLinks);
     });
+    store.select(ProductLinkDao.getProductLinks).subscribe(x => console.log(x));
   }
 
   fetchProductLinks() {
-    this.store.dispatch({...new FetchProductLinks(), progressBarKey: this.PRODUCT_LINKING_PAGE});
+    this.store.dispatch(this.productLinkDao.listProductLinks({progressBarKey: this.PRODUCT_LINKING_PAGE}));
   }
 
   ngOnInit() {
@@ -40,25 +43,31 @@ export class ProductLinkingContainerComponent implements OnInit {
   }
 
   toggleEnabled(productLink: ProductLink) {
-    this.store.dispatch(
-        {...new UpdateProductLink({...productLink, enabled: !productLink.enabled}), 
-         progressBarKey: this.PRODUCT_LINKING_PAGE});
+    this.store.dispatch(this.productLinkDao.updateProductLink({...productLink, enabled: !productLink.enabled}, {
+      progressBarKey: this.PRODUCT_LINKING_PAGE
+    }));
   }
 
   deleteRow(productLink: ProductLink) {
-    this.store.dispatch({...new DeleteProductLink(productLink),
-      progressBarKey: this.PRODUCT_LINKING_PAGE});
+    this.store.dispatch(this.productLinkDao.deleteProductLink(productLink, {
+      progressBarKey: this.PRODUCT_LINKING_PAGE
+    }));
+  }
+
+  refreshRow(productLink: ProductLink) {
+    console.log('refresh');
+    this.store.dispatch(this.productLinkDao.getProductLink(getProductLinkKey(productLink), {
+      progressBarKey: this.PRODUCT_LINKING_PAGE
+    }));
   }
 
   addProductLink() {
-    this.dialog.open(NewProductLinkComponent).afterClosed().subscribe(((dialogResult) => {
-      if (dialogResult) { this.fetchProductLinks(); }
-    }));
+    this.dialog.open(NewProductLinkComponent);
   }
 
   multiAction() {
     console.log('launching multi action');
-    this.store.dispatch(new MultiAction([new ActionA(), new ActionB()], 
+    this.store.dispatch(new MultiAction([new ActionA({}), new ActionB({})], 
       {onSuccess: new UiEventAction(new ShowSnackBar('Multi action is complete'))}));
   }
 

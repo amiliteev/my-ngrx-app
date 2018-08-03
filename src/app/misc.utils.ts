@@ -12,6 +12,10 @@ export function filterFirst<T>(array: T[], callbackfn: (val: T) => boolean): T[]
   return [...array.slice(0, firstIndex), ...array.slice(firstIndex + 1, array.length)];
 }
 
+export function replaceKey<K, V>(map: Map<K, V>, key: K, value: V): Map<K, V> {
+  return new Map<K, V>(map).set(key, value);
+}
+
 class TimestampedResponse {
   timestamp: number;
   request$?: Observable<any>;

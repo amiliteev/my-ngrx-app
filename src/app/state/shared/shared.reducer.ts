@@ -1,39 +1,38 @@
-import { UiEvent, SharedActionUnion, SharedActionTypes, RequestSuccess, RequestFailure, NoAction, UiEventAction, MultiAction, UnregisterFromMultiAction, RequestActionImpl } from "./shared.actions";
+import { UiEvent, SharedActionUnion, SharedActionTypes, RequestResult, RequestFailure, NoAction, UiEventAction, MultiAction, UnregisterFromMultiAction, RequestActionImpl, isWithOptions, isRequestResult } from "./shared.actions";
 import { filterFirst } from "../../misc.utils";
 import { Action, createFeatureSelector, createSelector } from "@ngrx/store";
+import { EntityActionTypes, EntityActionUnion } from "../entities/entities.actions";
 
 export const SHARED_STATE = 'shared';
 
 export interface SharedState {
   actionsProcessing: string[];
   uiEvent?: UiEvent;
-  multiActions: Action[];
+  multiActionUids: string[];
   activeProgressBars: string[];
 }
 
 const initialState: SharedState = {
   actionsProcessing: [],
-  multiActions: [],
+  multiActionUids: [],
   activeProgressBars: []
 };
 
 export function sharedReducer(state: SharedState = initialState, action: SharedActionUnion): SharedState {
   console.log(action);
-  if (action['progressBarKey']) {
-    return {
+  if (isWithOptions(action) && action.options.progressBarKey) {
+    state = {
       ...state,
-      actionsProcessing: [...state.actionsProcessing, action.type],
-      activeProgressBars: [...state.activeProgressBars, action['progressBarKey']]
-   };
+      activeProgressBars: [...state.activeProgressBars, action.options.progressBarKey]
+    };
+  }
+  if (isRequestResult(action) && isWithOptions(action.forAction) && action.forAction.options.progressBarKey) {
+    state = {
+      ...state,
+      activeProgressBars: filterFirst(state.activeProgressBars, (s) => s === action.forAction.options.progressBarKey)
+    };
   }
   switch (action.type) {
-    case SharedActionTypes.REQUEST_SUCCESS:
-    case SharedActionTypes.REQUEST_FAILURE:
-      return {
-        ...state,
-        actionsProcessing: filterFirst(state.actionsProcessing, (s) => s === action.forAction.type),
-        activeProgressBars: filterFirst(state.activeProgressBars, (s) => s === action.forAction.progressBarKey)
-      };
     case SharedActionTypes.UI_EVENT_ACTION:
       return {
         ...state,
@@ -42,12 +41,12 @@ export function sharedReducer(state: SharedState = initialState, action: SharedA
     case SharedActionTypes.MULTI_ACTION:
       return {
         ...state,
-        multiActions: [...state.multiActions, ...action.actions],
+        multiActionUids: [...state.multiActionUids, ...action.actions.map(action => action.uid)],
       };
     case SharedActionTypes.UNREGISTER_FROM_MULTI_ACTION:
       return {
         ...state,
-        multiActions: filterFirst(state.multiActions, (elem) => elem === action.action)
+        multiActionUids: filterFirst(state.multiActionUids, (elem) => elem === action.actionUid)
       };
     default: 
       return state;
