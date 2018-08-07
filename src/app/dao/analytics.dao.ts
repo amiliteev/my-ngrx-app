@@ -19,6 +19,7 @@ export class AnalyticsDao {
   listGaAccountHeaders(options: RequestOptions): QueryEntities<GaAccountHeader> {
     return new QueryEntities(EntityType.GA_ACCOUNT_HEADER, { ...options,
       method: AnalyticsMethods.GET_ACCOUNT_HEADERS,
+      cacheMaxAge: 10,
     });
   }
 
@@ -26,7 +27,8 @@ export class AnalyticsDao {
     return new QueryEntities(EntityType.GA_PROPERTY, { ...options,
       method: AnalyticsMethods.GET_ACCOUNT_PROPERTIES,
       parameters: [account.accountId],
-      path: [getAccountKey(account)]
+      path: [getAccountKey(account)],
+      cacheMaxAge: 1000
     });
   }
 

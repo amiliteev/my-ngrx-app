@@ -7,7 +7,7 @@ import { AppState } from "../../app.module";
 
 export class CommonEffects {
 
-  constructor (readonly actions$: Actions, readonly store$: Store<AppState>) {}
+  constructor (protected readonly actions$: Actions, protected readonly store$: Store<AppState>) {}
 
   // list<T>(actionType: string, listFunc: (action?: Action) => Observable<T[]>, 
   //   SuccessAction: {new (response: T[])}): Observable<Action> 

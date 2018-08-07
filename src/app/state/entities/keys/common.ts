@@ -7,7 +7,7 @@ export enum EntityType {
 }
 
 export interface EntityKey {
-  readonly type: string;
+  readonly type: EntityType;
   toStringKey(): string;
 }
 

@@ -22,12 +22,14 @@ export interface EntityAction extends RequestAction {
 export interface EntityRequestOptions<T> extends RequestOptions {
   readonly method: AnalyticsMethods | ConfigMethods,
   readonly parameters?: any[],
-  readonly path?: EntityKey[]
+  readonly path?: EntityKey[],
+  readonly cacheMaxAge?: number,
 }
 
 export class GetEntity<T> implements EntityAction {
   readonly type: EntityActionTypes.GET_ENTITY = EntityActionTypes.GET_ENTITY;
-  constructor (readonly entityType: EntityType, readonly options: EntityRequestOptions<T>) {}
+  constructor (readonly entityType: EntityType, readonly entityKey: EntityKey, 
+    readonly options: EntityRequestOptions<T>) {}
 }
 
 export class CreateEntity<T> implements EntityAction {
@@ -54,7 +56,7 @@ export class QueryEntities<T> implements RequestAction, EntityAction {
 export class EntitySuccess implements Action, RequestResult {
   readonly type: EntityActionTypes.ENTITY_SUCCESS = EntityActionTypes.ENTITY_SUCCESS;
   constructor (readonly forAction: EntityAction, 
-    readonly payload?: any) {}
+    readonly payload: any, readonly isCachedData?: boolean) {}
 }
 
 export type EntityActionUnion = GetEntity<{}> | CreateEntity<{}> | UpdateEntity<{}> | DeleteEntity<{}> | 

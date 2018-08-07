@@ -57,12 +57,14 @@ export class AnalyticsService {
   }
 
   getAccountHeaders(): Observable<GaAccountHeader[]> {
-    return cacheHttpRequest('/account-headers', 10, of(gaAccountHeaders).pipe(randomDelay()));
+    // return cacheHttpRequest('/account-headers', 10, of(gaAccountHeaders).pipe(randomDelay()));
+    return of(gaAccountHeaders).pipe(randomDelay());
   }
 
   getAccountProperties(accountId: number): Observable<GaProperty[]> {
     const properties = gaProperties.filter((property) => property.accountId === accountId);
-    return cacheHttpRequest(`/accounts/${accountId}/properties`, 10, of(properties).pipe(randomDelay()));
+    // return cacheHttpRequest(`/accounts/${accountId}/properties`, 10, of(properties).pipe(randomDelay()));
+    return of(properties).pipe(randomDelay());
   }
 
 }

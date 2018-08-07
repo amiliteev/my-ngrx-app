@@ -57,7 +57,7 @@ export class ProductLinkingContainerComponent implements OnInit {
   refreshRow(productLink: ProductLink) {
     console.log('refresh');
     this.store.dispatch(this.productLinkDao.getProductLink(getProductLinkKey(productLink), {
-      progressBarKey: this.PRODUCT_LINKING_PAGE
+      progressBarKey: this.PRODUCT_LINKING_PAGE,
     }));
   }
 

@@ -11,7 +11,7 @@ export const ENTITY_STATE = 'entity';
 
 export class EntityData<T> {
   readonly timestamp: number = new Date().getTime();
-  constructor (readonly data: T, readonly children?: EntityState) {}
+  constructor (readonly data: T, public children?: EntityState) {}
 }
 
 export interface EntityByKey<T> {
@@ -80,20 +80,23 @@ function updateEntitySet(entitySet: EntitySet<{}>, entityKey: EntityKey, entityD
   };
 }
 
-enum UpdateType {
-  REPLACE_ENTITY_SET,
-  ADD_ENTITY,
-  DELETE_ENTITY
-}
-
 interface UpdateWith {
-  updateType: UpdateType;
   entitySetByType?: EntitySetByType;
   entityKey?: EntityKey;
   data?: {};
 }
 
+type UpdateFunction = (entityState: EntityState, updateWith: UpdateWith) => EntityState;
+
 function replaceEntitySet(entityState: EntityState, updateWith: UpdateWith) {
+  const existingSet = entityState.entitySetByType[
+    Object.keys(updateWith.entitySetByType)[0]];
+  const newSet = Object.values(updateWith.entitySetByType)[0];
+  Object.keys(newSet.entityByKey).forEach((key) => {
+    const newData = newSet.entityByKey[key];
+    const existingData = existingSet && existingSet.entityByKey[key];
+    newData.children = existingData && existingData.children;
+  });
   return {
     ...entityState, 
     entitySetByType: {
@@ -111,11 +114,13 @@ function addEntityToSet(entityState: EntityState, updateWith: UpdateWith) {
       entityByKey: {}
     }
   }
+  const existingEntity = entitySet.entityByKey[updateWith.entityKey.toStringKey()];
   entitySet = {
     ...entitySet,
     entityByKey: {
       ...entitySet.entityByKey,
-      [updateWith.entityKey.toStringKey()]: new EntityData(updateWith.data)
+      [updateWith.entityKey.toStringKey()]: 
+        new EntityData(updateWith.data, existingEntity && existingEntity.children)
     }
   }
   return {
@@ -144,18 +149,16 @@ function deleteEntityFromSet(entityState: EntityState, updateWith: UpdateWith) {
   }
 }
 
-function updateEntityState(entityState: EntityState, path: EntityKey[], updateWith: UpdateWith): EntityState {
+function updateEntityState(entityState: EntityState, path: EntityKey[], 
+  updateFunction: UpdateFunction, updateWith: UpdateWith): EntityState 
+{
   if (!entityState) {
     entityState =  {
       entitySetByType: {}
     };
   }
   if (!path.length) {
-    switch (updateWith.updateType) {
-      case UpdateType.REPLACE_ENTITY_SET: return replaceEntitySet(entityState, updateWith);
-      case UpdateType.ADD_ENTITY: return addEntityToSet(entityState, updateWith);
-      case UpdateType.DELETE_ENTITY: return deleteEntityFromSet(entityState, updateWith);
-    }
+    return updateFunction(entityState, updateWith);
   } else {
     const entityKey = path[0];
     const entitySet = entityState.entitySetByType[entityKey.type];
@@ -164,7 +167,7 @@ function updateEntityState(entityState: EntityState, path: EntityKey[], updateWi
     if (!entity) { throw new Error(`${entityKey} not found`); }
     const newEntityData = {
       ...entity,
-      children: updateEntityState(entity.children, path.slice(1), updateWith)
+      children: updateEntityState(entity.children, path.slice(1), updateFunction, updateWith)
     }
     return {
       ...entityState,
@@ -181,26 +184,24 @@ export function entityReducer(state: EntityState = initialState, action: EntityA
     case EntityActionTypes.QUERY_ENTITIES:
       return state;
     case EntityActionTypes.ENTITY_SUCCESS:
+      if (action.isCachedData) { return state; }
       if (action.forAction instanceof QueryEntities) {
         const entitySetByType = {
           [action.forAction.entityType.toString()]:
             createEntitySet(action.payload, getKeyFactory(action.forAction.entityType))
         };
-        return updateEntityState(state, action.forAction.options.path || [], {
-          updateType: UpdateType.REPLACE_ENTITY_SET,
+        return updateEntityState(state, action.forAction.options.path || [], replaceEntitySet, {
           entitySetByType
         });
       } else if (action.forAction instanceof GetEntity ||
                  action.forAction instanceof CreateEntity || 
                  action.forAction instanceof UpdateEntity) {
-        return updateEntityState(state, action.forAction.options.path || [], {
-          updateType: UpdateType.ADD_ENTITY,
+        return updateEntityState(state, action.forAction.options.path || [], addEntityToSet, {
           entityKey: getKeyFactory(action.forAction.entityType)(action.payload),
           data: action.payload
         });
       } else if (action.forAction instanceof DeleteEntity) {
-        return updateEntityState(state, action.forAction.options.path || [], {
-          updateType: UpdateType.DELETE_ENTITY,
+        return updateEntityState(state, action.forAction.options.path || [], deleteEntityFromSet, {
           entityKey: getKeyFactory(action.forAction.entityType)(action.payload),
           data: action.payload
         });

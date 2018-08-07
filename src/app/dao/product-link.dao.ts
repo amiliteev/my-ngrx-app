@@ -19,14 +19,16 @@ export class ProductLinkDao {
     return new QueryEntities(EntityType.PRODUCT_LINK, {
       ...options,
       method: ConfigMethods.QUERY_PRODUCT_LINKS,
+      cacheMaxAge: 5,
     });
   }
 
   getProductLink(key: ProductLinkKey, options: RequestOptions): GetEntity<ProductLink> {
-    return new GetEntity(EntityType.PRODUCT_LINK, {
+    return new GetEntity(EntityType.PRODUCT_LINK, key, {
       ...options,
       method: ConfigMethods.GET_PRODUCT_LINK,
       parameters: [key],
+      cacheMaxAge: 5
     });
   }
 
